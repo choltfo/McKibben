@@ -1,22 +1,43 @@
+// McKibben pneumatic muscle actuated tail controller.
+// Charles Holtforster
+// 2019
+
+// Valve pin assignments.
+// Map the Arduino pin numbers for each valve to an array index.
 const int valve[8] = {8, 7, 4, 2, A3, A2, A1, A0};
 
+// Lists of valve indexes corresponding to X and Y actuator pairs.
 const int xvalves[4] = {0, 1, 2, 3};
 const int yvalves[4] = {4, 5, 6, 7};
 
+// Lookup keys for the _valves arrays.
 const int fillP = 0;
 const int dumpP = 1;
 const int fillN = 2;
 const int dumpN = 3;
 
+// An indexable list to both _valves arrays
+// valves[avalves[AXIS][VALVE_TYPE] is the pin number.
 const int* avalves[2] = {(void*)xvalves, (void*)yvalves};
 
-const int LEDs[2] = {12, 13};
+// Indicators on the PCB
+const int LEDs[2] = {10, 11};
 
+// Buttons on the PCB.
+const int button[2] = {12, 13};
+
+// Pins connected to the darlington array and 5V JST open-collector outputs.
+const int haptics[4] = {3, 5, 6, 9};
+
+// X and Y ADCs. The 0th should be X
 const int ADCS[2] = {A4, A5};
 
-const int f = 20;
-const int T = 1000/f;
+// Contoller timing
+const int F = 20; // PWM frequency
+const int T = 1000/F; // PWM period
+const int T_UP = 1; // ms, time between update cycles. Represents PWM resolution.
 
+// Trim values. Set at boot.
 int trims[2] = {1024/2, 1024/2};
 
 void setup() {
@@ -48,8 +69,10 @@ int mapCon(int con) {
 }
 
 void loop() {
-  long int t = (millis()%50)*2; // TESTING 123, MOTHERFUCKER!
-  for (int axis = 0; axis < 1; ++axis) {
+  long int t = (millis()%50)*2; // Generate PWM sawtooth wave time.
+
+  // Run the X and Y axis
+  for (int axis = 0; axis < 2; ++axis) {
     int*axisvalves = avalves[axis];
     int con = mapCon(analogRead(ADCS[axis]) - trims[axis]);
 
@@ -80,5 +103,5 @@ void loop() {
     }
   }
 
-  delay(5);
+  delay(T_UP); // Run
 }
